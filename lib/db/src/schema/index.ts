@@ -6,3 +6,4 @@ export * from "./announcements";
 export * from "./follows";
 export * from "./likes";
 export * from "./downloads";
+export * from "./settings";

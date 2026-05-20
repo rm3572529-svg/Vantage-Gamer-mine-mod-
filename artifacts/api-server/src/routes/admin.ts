@@ -172,6 +172,30 @@ router.post("/admin/announcements", async (req, res): Promise<void> => {
   res.status(201).json(announcement);
 });
 
+router.post("/admin/mods/:id/featured", async (req, res): Promise<void> => {
+  const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const featured = req.body?.featured === true || req.body?.featured === "true";
+  const [mod] = await db
+    .update(modsTable)
+    .set({ featured, updatedAt: new Date() })
+    .where(eq(modsTable.id, rawId))
+    .returning();
+  if (!mod) { res.status(404).json({ error: "Mod not found" }); return; }
+  res.json(mod);
+});
+
+router.post("/admin/mods/:id/vip", async (req, res): Promise<void> => {
+  const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const vip = req.body?.vip === true || req.body?.vip === "true";
+  const [mod] = await db
+    .update(modsTable)
+    .set({ vip, updatedAt: new Date() })
+    .where(eq(modsTable.id, rawId))
+    .returning();
+  if (!mod) { res.status(404).json({ error: "Mod not found" }); return; }
+  res.json(mod);
+});
+
 router.get("/admin/stats", async (_req, res): Promise<void> => {
   const [[totalMods], [pendingMods], [totalDevelopers], [pendingDevelopers], [totalUsers], [bannedUsers], [totalDownloadsAgg]] =
     await Promise.all([
