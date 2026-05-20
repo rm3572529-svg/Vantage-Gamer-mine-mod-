@@ -1,22 +1,35 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Vantage Gamer MineHub API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: stats
+    description: Public platform statistics
+  - name: mods
+    description: Mod upload management
+  - name: users
+    description: User management
+  - name: developers
+    description: Developer management
+  - name: admin
+    description: Admin operations
+  - name: downloads
+    description: Download tracking
+  - name: announcements
+    description: Announcements
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +37,839 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /stats:
+    get:
+      operationId: getPlatformStats
+      tags: [stats]
+      summary: Get platform-wide stats
+      responses:
+        "200":
+          description: Platform stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformStats"
+
+  /mods:
+    get:
+      operationId: listMods
+      tags: [mods]
+      summary: List approved mods
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [trending, latest, top]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: List of mods
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModListResponse"
+
+    post:
+      operationId: createMod
+      tags: [mods]
+      summary: Submit a new mod upload (developer only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModInput"
+      responses:
+        "201":
+          description: Mod created (pending review)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mod"
+
+  /mods/trending:
+    get:
+      operationId: getTrendingMods
+      tags: [mods]
+      summary: Get trending mods
+      responses:
+        "200":
+          description: Trending mods
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Mod"
+
+  /mods/featured:
+    get:
+      operationId: getFeaturedMods
+      tags: [mods]
+      summary: Get featured mods
+      responses:
+        "200":
+          description: Featured mods
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Mod"
+
+  /mods/{id}:
+    get:
+      operationId: getMod
+      tags: [mods]
+      summary: Get a single mod
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Mod details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mod"
+        "404":
+          description: Not found
+
+  /mods/{id}/like:
+    post:
+      operationId: likeMod
+      tags: [mods]
+      summary: Like a mod
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Like toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LikeResult"
+
+  /mods/{id}/comments:
+    get:
+      operationId: getModComments
+      tags: [mods]
+      summary: Get comments for a mod
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comment"
+    post:
+      operationId: createModComment
+      tags: [mods]
+      summary: Post a comment on a mod
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentInput"
+      responses:
+        "201":
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+
+  /downloads/track:
+    post:
+      operationId: trackDownload
+      tags: [downloads]
+      summary: Track a download and return the download URL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DownloadTrackInput"
+      responses:
+        "200":
+          description: Download URL with tracking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DownloadTrackResult"
+
+  /developers:
+    get:
+      operationId: listDevelopers
+      tags: [developers]
+      summary: List approved developers
+      parameters:
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [trending, top, featured]
+      responses:
+        "200":
+          description: List of developers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Developer"
+
+    post:
+      operationId: applyDeveloper
+      tags: [developers]
+      summary: Submit developer application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeveloperApplicationInput"
+      responses:
+        "201":
+          description: Application submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Developer"
+
+  /developers/{id}:
+    get:
+      operationId: getDeveloper
+      tags: [developers]
+      summary: Get developer profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Developer profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Developer"
+
+  /developers/{id}/follow:
+    post:
+      operationId: followDeveloper
+      tags: [developers]
+      summary: Follow or unfollow a developer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Follow toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FollowResult"
+
+  /announcements:
+    get:
+      operationId: listAnnouncements
+      tags: [announcements]
+      summary: List active announcements
+      responses:
+        "200":
+          description: Announcements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Announcement"
+
+  /admin/login:
+    post:
+      operationId: adminLogin
+      tags: [admin]
+      summary: Admin login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminLoginInput"
+      responses:
+        "200":
+          description: Admin session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSession"
+        "401":
+          description: Unauthorized
+
+  /admin/mods:
+    get:
+      operationId: adminListMods
+      tags: [admin]
+      summary: Admin - list all mods including pending
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, approved, rejected, suspended]
+      responses:
+        "200":
+          description: All mods
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModListResponse"
+
+  /admin/mods/{id}/approve:
+    post:
+      operationId: adminApproveMod
+      tags: [admin]
+      summary: Admin - approve a mod
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Mod approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mod"
+
+  /admin/mods/{id}/reject:
+    post:
+      operationId: adminRejectMod
+      tags: [admin]
+      summary: Admin - reject a mod
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminRejectInput"
+      responses:
+        "200":
+          description: Mod rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mod"
+
+  /admin/developers:
+    get:
+      operationId: adminListDevelopers
+      tags: [admin]
+      summary: Admin - list all developer applications
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, approved, rejected, banned]
+      responses:
+        "200":
+          description: Developer applications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Developer"
+
+  /admin/developers/{id}/approve:
+    post:
+      operationId: adminApproveDeveloper
+      tags: [admin]
+      summary: Admin - approve developer application
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Developer approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Developer"
+
+  /admin/developers/{id}/ban:
+    post:
+      operationId: adminBanDeveloper
+      tags: [admin]
+      summary: Admin - ban a developer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Developer banned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Developer"
+
+  /admin/users:
+    get:
+      operationId: adminListUsers
+      tags: [admin]
+      summary: Admin - list all users
+      responses:
+        "200":
+          description: Users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AppUser"
+
+  /admin/announcements:
+    post:
+      operationId: createAnnouncement
+      tags: [admin]
+      summary: Admin - create announcement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnnouncementInput"
+      responses:
+        "201":
+          description: Announcement created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Announcement"
+
+  /admin/stats:
+    get:
+      operationId: adminGetStats
+      tags: [admin]
+      summary: Admin - get full platform stats
+      responses:
+        "200":
+          description: Full stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    PlatformStats:
+      type: object
+      required: [totalMods, totalDownloads, totalDevelopers, totalUsers]
+      properties:
+        totalMods:
+          type: integer
+        totalDownloads:
+          type: integer
+        totalDevelopers:
+          type: integer
+        totalUsers:
+          type: integer
+
+    AdminStats:
+      type: object
+      required: [totalMods, totalDownloads, totalDevelopers, totalUsers, pendingMods, pendingDevelopers, bannedUsers]
+      properties:
+        totalMods:
+          type: integer
+        totalDownloads:
+          type: integer
+        totalDevelopers:
+          type: integer
+        totalUsers:
+          type: integer
+        pendingMods:
+          type: integer
+        pendingDevelopers:
+          type: integer
+        bannedUsers:
+          type: integer
+
+    Mod:
+      type: object
+      required: [id, title, description, category, status, developerId, developerName, version, downloadCount, likeCount, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+          enum: [mod, tool, texture, shader, utility]
+        status:
+          type: string
+          enum: [pending, approved, rejected, suspended]
+        developerId:
+          type: string
+        developerName:
+          type: string
+        developerAvatar:
+          type: ["string", "null"]
+        version:
+          type: string
+        changelog:
+          type: ["string", "null"]
+        bannerImage:
+          type: ["string", "null"]
+        screenshots:
+          type: array
+          items:
+            type: string
+        setupVideo:
+          type: ["string", "null"]
+        gameplayVideo:
+          type: ["string", "null"]
+        downloadLink:
+          type: string
+        installationGuide:
+          type: ["string", "null"]
+        tags:
+          type: array
+          items:
+            type: string
+        downloadCount:
+          type: integer
+        likeCount:
+          type: integer
+        featured:
+          type: boolean
+        vip:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    ModInput:
+      type: object
+      required: [title, description, category, version, downloadLink]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          minLength: 1
+        category:
+          type: string
+          enum: [mod, tool, texture, shader, utility]
+        version:
+          type: string
+        changelog:
+          type: string
+        bannerImage:
+          type: string
+        screenshots:
+          type: array
+          items:
+            type: string
+        setupVideo:
+          type: string
+        gameplayVideo:
+          type: string
+        downloadLink:
+          type: string
+        installationGuide:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+
+    ModListResponse:
+      type: object
+      required: [mods, total]
+      properties:
+        mods:
+          type: array
+          items:
+            $ref: "#/components/schemas/Mod"
+        total:
+          type: integer
+
+    Developer:
+      type: object
+      required: [id, userId, name, status, followersCount, uploadsCount, likesCount, createdAt]
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        name:
+          type: string
+        phone:
+          type: ["string", "null"]
+        youtubeChannelName:
+          type: ["string", "null"]
+        youtubeLink:
+          type: ["string", "null"]
+        instagram:
+          type: ["string", "null"]
+        telegram:
+          type: ["string", "null"]
+        about:
+          type: ["string", "null"]
+        avatar:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [pending, approved, rejected, banned]
+        badges:
+          type: array
+          items:
+            type: string
+            enum: [featured, verified, vip]
+        followersCount:
+          type: integer
+        uploadsCount:
+          type: integer
+        likesCount:
+          type: integer
+        createdAt:
+          type: string
+
+    DeveloperApplicationInput:
+      type: object
+      required: [name, phone, about]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        phone:
+          type: string
+        youtubeChannelName:
+          type: string
+        youtubeLink:
+          type: string
+        instagram:
+          type: string
+        telegram:
+          type: string
+        about:
+          type: string
+
+    AppUser:
+      type: object
+      required: [id, email, username, role, status, createdAt]
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        username:
+          type: string
+        role:
+          type: string
+          enum: [user, developer, admin]
+        loginProvider:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [active, banned]
+        createdAt:
+          type: string
+
+    Comment:
+      type: object
+      required: [id, modId, userId, username, content, createdAt]
+      properties:
+        id:
+          type: string
+        modId:
+          type: string
+        userId:
+          type: string
+        username:
+          type: string
+        userAvatar:
+          type: ["string", "null"]
+        content:
+          type: string
+        createdAt:
+          type: string
+
+    CommentInput:
+      type: object
+      required: [content, userId, username]
+      properties:
+        content:
+          type: string
+          minLength: 1
+        userId:
+          type: string
+        username:
+          type: string
+        userAvatar:
+          type: string
+
+    LikeResult:
+      type: object
+      required: [liked, likeCount]
+      properties:
+        liked:
+          type: boolean
+        likeCount:
+          type: integer
+
+    FollowResult:
+      type: object
+      required: [following, followersCount]
+      properties:
+        following:
+          type: boolean
+        followersCount:
+          type: integer
+
+    DownloadTrackInput:
+      type: object
+      required: [modId]
+      properties:
+        modId:
+          type: string
+        userId:
+          type: ["string", "null"]
+
+    DownloadTrackResult:
+      type: object
+      required: [downloadUrl, downloadCount]
+      properties:
+        downloadUrl:
+          type: string
+        downloadCount:
+          type: integer
+
+    Announcement:
+      type: object
+      required: [id, title, content, type, createdAt]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
+        type:
+          type: string
+          enum: [info, warning, giveaway, update]
+        pinned:
+          type: boolean
+        createdAt:
+          type: string
+
+    AnnouncementInput:
+      type: object
+      required: [title, content, type]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        content:
+          type: string
+          minLength: 1
+        type:
+          type: string
+          enum: [info, warning, giveaway, update]
+        pinned:
+          type: boolean
+
+    AdminLoginInput:
+      type: object
+      required: [password]
+      properties:
+        password:
+          type: string
+
+    AdminSession:
+      type: object
+      required: [token, expiresAt]
+      properties:
+        token:
+          type: string
+        expiresAt:
+          type: string
+
+    AdminRejectInput:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string

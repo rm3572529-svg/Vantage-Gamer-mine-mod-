@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Vantage Gamer MineHub"
+version = "1.0.0"
+id = "artifacts/vantage-minehub"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23753
+
+[services.development]
+run = "pnpm --filter @workspace/vantage-minehub run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/vantage-minehub", "run", "build" ]
+publicDir = "artifacts/vantage-minehub/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23753"
+BASE_PATH = "/"
