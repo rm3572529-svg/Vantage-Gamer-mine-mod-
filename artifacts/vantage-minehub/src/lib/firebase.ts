@@ -1,17 +1,15 @@
-// TODO: Replace with your Firebase config
-// Import the functions you need from the SDKs you need
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getDatabase } from 'firebase/database';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "YOUR_API_KEY",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "YOUR_AUTH_DOMAIN",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "YOUR_PROJECT_ID",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "YOUR_STORAGE_BUCKET",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "YOUR_MESSAGING_SENDER_ID",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "YOUR_APP_ID",
-  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL || "YOUR_DATABASE_URL",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCFLfuGTp5_Hw1voZgitGfvnqhkuYPrUpU",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "vantage-mine-hub.firebaseapp.com",
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL || "https://vantage-mine-hub-default-rtdb.firebaseio.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "vantage-mine-hub",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "vantage-mine-hub.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "538561818249",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:538561818249:web:558469806ba20f19f2a058",
 };
 
 export const app = initializeApp(firebaseConfig);
